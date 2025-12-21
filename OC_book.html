@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Archive: The Fallen</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Special+Elite&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- ATMOSPHERE & RESET --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-color: #0f0c0a; 
+            /* A dark, oily background representing the polluted earth */
+            background-image: 
+                radial-gradient(circle at 50% 50%, #1f1a16 0%, #000000 100%),
+                repeating-linear-gradient(90deg, rgba(0,0,0,0.1) 0px, rgba(0,0,0,0.1) 1px, transparent 1px, transparent 20px);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Crimson Text', serif;
+            overflow: hidden;
+            perspective: 1500px;
+        }
+
+        /* --- BOOK STRUCTURE --- */
+        .book {
+            position: relative;
+            width: 420px;
+            height: 640px;
+            transform-style: preserve-3d;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.9);
+            transition: transform 0.5s;
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .book { width: 320px; height: 520px; }
+        }
+
+        .page {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            transform-origin: left center;
+            transition: transform 1.2s cubic-bezier(0.645, 0.045, 0.355, 1);
+            transform-style: preserve-3d;
+            cursor: pointer;
+        }
+
+        /* --- PAGE TEXTURES --- */
+        .front, .back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            background-color: #e3d2b3;
+            /* Texture: Aged Paper */
+            background-image: url("https://www.transparenttextures.com/patterns/aged-paper.png");
+            border-radius: 4px 12px 12px 4px;
+            box-shadow: inset 15px 0 40px rgba(0,0,0,0.15), 5px 5px 15px rgba(0,0,0,0.3);
+            padding: 40px 30px;
+            display: flex;
+            flex-direction: column;
+            color: #2b2b2b;
+            border: 1px solid #8c7b64;
+            overflow: hidden;
+        }
+
+        .back {
+            transform: rotateY(180deg);
+            border-radius: 12px 4px 4px 12px;
+            box-shadow: inset -15px 0 40px rgba(0,0,0,0.15), -5px 5px 15px rgba(0,0,0,0.3);
+        }
+
+        /* --- COVER STYLING --- */
+        .cover-front {
+            background-color: #261815; /* Deep, dried blood/leather color */
+            background-image: url("https://www.transparenttextures.com/patterns/leather.png");
+            border: 6px solid #b8860b; /* Tarnished Gold */
+            color: #b8860b;
+            text-align: center;
+            justify-content: center;
+            /* Overlaying a 'grid' to show machine dominance */
+            box-shadow: inset 0 0 50px #000;
+        }
+
+        .cover-front h1 {
+            font-family: 'Cinzel', serif;
+            font-size: 3rem;
+            letter-spacing: 5px;
+            text-shadow: 0 4px 10px rgba(0,0,0,0.8);
+            border-bottom: 2px solid #b8860b;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+        }
+
+        .stamp-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-15deg);
+            border: 4px solid #8a3324;
+            color: #8a3324;
+            font-family: 'Special Elite', cursive;
+            font-size: 2rem;
+            padding: 10px 20px;
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        /* --- TYPOGRAPHY --- */
+        h2 {
+            font-family: 'Cinzel', serif;
+            font-size: 1.6rem;
+            color: #261815;
+            border-bottom: 1px solid #b8860b;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+        }
+
+        h3 {
+            font-family: 'Cinzel', serif;
+            font-size: 1.1rem;
+            color: #5e4b35;
+            margin-top: 15px;
+            font-weight: 700;
+        }
+
+        .field-label {
+            font-family: 'Cinzel', serif;
+            font-weight: bold;
+            color: #5e4b35;
+            font-size: 0.95rem;
+        }
+
+        .field-value {
+            font-family: 'Crimson Text', serif;
+            font-size: 1.1rem;
+            color: #000;
+            border-bottom: 1px dotted #8c7b64;
+            display: inline-block;
+            width: 100%;
+            margin-bottom: 8px;
+        }
+
+        p { line-height: 1.4; margin-bottom: 8px; font-size: 0.95rem; text-align: justify; }
+
+        /* --- STAT GRID STYLING --- */
+        .stat-grid {
+            display: grid;
+            grid-template-columns: 1fr 50px;
+            gap: 5px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 5px;
+        }
+        
+        .stat-name { font-family: 'Cinzel', serif; }
+        .stat-num { font-family: 'Special Elite', cursive; color: #8a3324; font-weight: bold; text-align: right; }
+
+        /* --- RPG HUD BLOCK (Digital Overlay Effect) --- */
+        .hud-container {
+            margin-top: 20px;
+            background: rgba(43, 43, 43, 0.05);
+            border: 2px solid #574636;
+            padding: 15px;
+            position: relative;
+        }
+        
+        /* The "Hologram" feel */
+        .hud-container::before {
+            content: "SYSTEM_MONITOR";
+            position: absolute;
+            top: -10px;
+            right: 10px;
+            background: #e3d2b3;
+            font-family: 'Special Elite', cursive;
+            font-size: 0.7rem;
+            color: #8a3324;
+            padding: 0 5px;
+        }
+
+        .hud-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            align-items: center;
+        }
+
+        .hud-label { font-family: 'Cinzel', serif; font-weight: bold; }
+        .hud-value { font-family: 'Special Elite', cursive; color: #2b2b2b; }
+
+        /* --- IMAGE STYLING --- */
+        .portrait-frame {
+            width: 100%;
+            height: 250px;
+            border: 4px double #b8860b;
+            padding: 5px;
+            background: #fff;
+            margin-bottom: 20px;
+            filter: sepia(0.4) contrast(1.1); /* Old photo look */
+        }
+        .portrait-frame img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* --- CONTROLS --- */
+        .controls {
+            position: absolute;
+            bottom: 20px;
+            z-index: 100;
+            display: flex;
+            gap: 20px;
+        }
+
+        button {
+            padding: 10px 25px;
+            background: #261815;
+            color: #b8860b;
+            border: 1px solid #b8860b;
+            font-family: 'Cinzel', serif;
+            cursor: pointer;
+            transition: 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        button:hover {
+            background: #b8860b;
+            color: #261815;
+            box-shadow: 0 0 15px #b8860b;
+        }
+
+        .flipped { transform: rotateY(-180deg); }
+
+        /* Initial Z-Index Stacking */
+        #p1 { z-index: 6; }
+        #p2 { z-index: 5; }
+        #p3 { z-index: 4; }
+        #p4 { z-index: 3; }
+        #p5 { z-index: 2; }
+        
+        /* Utility */
+        .highlight { color: #8a3324; font-weight: bold; }
+        .machine-text { font-family: 'Special Elite', cursive; font-size: 0.8rem; color: #555; display: block; margin-top: -5px; margin-bottom: 10px;}
+        .ability-details { font-size: 0.9rem; margin-left: 10px; border-left: 2px solid #b8860b; padding-left: 10px; }
+        .cooldown { font-family: 'Special Elite'; font-size: 0.8rem; color: #8a3324; margin-top: 5px; text-align: right; display: block; }
+    </style>
+</head>
+<body>
+
+    <div class="book" id="book">
+        
+        <!-- PAGE 1: COVER / IDENTITY -->
+        <div class="page" id="p1">
+            <div class="front cover-front">
+                <p style="font-family: 'Special Elite'; opacity: 0.7; font-size: 0.8rem;">ARCHIVE ENTRY: #000-GOD-NULL</p>
+                
+                <h1 style="margin-top: 50px;">DEUS<br>MACHINAE</h1>
+                
+                <p style="font-style: italic; margin-top: 20px;">"The heavens are empty.<br>We built new ones."</p>
+                
+                <div class="stamp-overlay">DEPRECATED</div>
+                
+                <div style="margin-top: 80px; font-size: 2rem;">†</div>
+            </div>
+
+            <div class="back">
+                <h2>Entity Identity</h2>
+                <span class="machine-text">Scanning biological signature...</span>
+
+                <div>
+                    <span class="field-label">Name:</span>
+                    <span class="field-value">Nasoi</span>
+                </div>
+                <div>
+                    <span class="field-label">Age:</span>
+                    <span class="field-value">Timeless (Physically 15)</span>
+                </div>
+                <div>
+                    <span class="field-label">Gender/Pronouns:</span>
+                    <span class="field-value">Female (She/they)</span>
+                </div>
+                <div>
+                    <span class="field-label">Sexuality:</span>
+                    <span class="field-value">aroace</span>
+                </div>
+                
+                <div style="margin-top: 15px;"></div>
+
+                <div>
+                    <span class="field-label">Height:</span>
+                    <span class="field-value">154 cm</span>
+                </div>
+                <div>
+                    <span class="field-label">Weight:</span>
+                    <span class="field-value">68 kg</span>
+                </div>
+                
+                <div style="margin-top: 15px;"></div>
+
+                <div>
+                    <span class="field-label">Origin (Fandom):</span>
+                    <span class="field-value">Original (My book :3)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAGE 2: PERSONALITY / CAPABILITIES I -->
+        <div class="page" id="p2">
+            <div class="front">
+                <h2>Personality</h2>
+                <span class="machine-text">Psych-Profile: Unstable</span>
+                <p>Nasoi, For her lack of experience in godhood, still holds a deep care for humanity despite them being the ones that forced her out of heaven, she's extremly happy-go-lucky and trusts very easily, they're EXTREMLY obsessed over fire, due to being the former god of it. which leads to awkward situations when meeting fire elementals and other beings made of, or harnessing fire</p>
+
+                <h2 style="margin-top: 20px;">Backstory</h2>
+                <span class="machine-text">History File: Corrupted</span>
+                <p>Due to the second industrial revolution on earth, humanity decided that gods, such as nasoi and her family are no longer needed. In exchange, monoliths to machine took over the heavenly throne in a gigantic war. leading to the death of one of Nasoi's siblings, and their subsequent exile to the land of the living.</p>
+                <p>Despite everything, nasoi still believes in the goodness of humanity, believing this all to be a big misunderstanding.</p>
+            </div>
+
+            <div class="back">
+                <h2>Capabilities (I)</h2>
+                <span class="machine-text">Threat Level: SIGNIFICANT</span>
+
+                <h3>1: Immolate Self</h3>
+                <p>Nasoi burns away a piece of her divine essence to fuel a desperate blaze. A painful memory of former glory.</p>
+                <div class="ability-details">
+                    <p><strong>Activation:</strong> Sacrifices 15% Max HP.</p>
+                    <p><strong>Effect (3 turns):</strong><br>
+                    - <strong>Inner Flame:</strong> +2.5x Power. Attacks deal +(2.0 x P) fire dmg.<br>
+                    - <strong>Shared Spark:</strong> Allies deal +(1.5 x C) bonus fire dmg.<br>
+                    - <strong>Aura:</strong> 1 random enemy takes (1.0 x P) dmg/turn.</p>
+                </div>
+                <span class="cooldown">(Cooldown: 7 turns)</span>
+
+                <h3>2: Choking Ash</h3>
+                <p>Nasoi conjures a vortex of blinding, supernatural ash filled with whispers of a dead heaven.</p>
+                <div class="ability-details">
+                    <p><strong>Effect:</strong> 2 targets make a Save.<br>
+                    - <strong>Failed:</strong> Ashen-Blinded (2 turns). 50% miss chance. (1.5 x M) psychic dmg/turn.<br>
+                    - <strong>Success:</strong> Disadvantage on next attack.</p>
+                </div>
+                <span class="cooldown">(Cooldown: 6 turns)</span>
+            </div>
+        </div>
+
+        <!-- PAGE 3: CAPABILITIES II / SYSTEM ANALYSIS -->
+        <div class="page" id="p3">
+            <div class="front">
+                <h2>Capabilities (II)</h2>
+                <span class="machine-text">File Continued...</span>
+
+                <h3>3: Vestige of a Dying Star (Ult)</h3>
+                <p>Nasoi gathers the last vestiges of her godhood, unleashing the memory of her true form: a living star.</p>
+                <div class="ability-details">
+                    <p><strong>Req:</strong> < 50% HP or Ally Down.</p>
+                    <p><strong>Charge (1 turn):</strong> 50% Dmg Red.</p>
+                    <p><strong>Effect (3 turns):</strong><br>
+                    - <strong>Solar Corona:</strong> Enemies take (2.5 x P) fire dmg/turn. Party immune to ranged.<br>
+                    - <strong>Sun-Touched:</strong> Party ignores 25% DEF, +(3.0 x C) dmg.<br>
+                    - <strong>Solar Flare:</strong> Bonus Action: Deal (3.0 x P) to 2 enemies.</p>
+                    <p><strong>Final Detonation:</strong> Star collapses. Deals total dmg dealt during mode to all enemies. Nasoi stunned 2 turns.</p>
+                </div>
+                <span class="cooldown">(Cooldown: 22 turns)</span>
+            </div>
+
+            <div class="back">
+                <h2>System Analysis</h2>
+                
+                <div style="margin-top: 20px;">
+                    <div class="stat-grid">
+                        <span class="stat-name">Power</span>
+                        <span class="stat-num">8</span>
+                    </div>
+                    <div class="stat-grid">
+                        <span class="stat-name">Defense</span>
+                        <span class="stat-num">7</span>
+                    </div>
+                    <div class="stat-grid">
+                        <span class="stat-name">Agility</span>
+                        <span class="stat-num">4</span>
+                    </div>
+                    <div class="stat-grid">
+                        <span class="stat-name">Mind</span>
+                        <span class="stat-num">5</span>
+                    </div>
+                    <div class="stat-grid">
+                        <span class="stat-name">Charisma</span>
+                        <span class="stat-num">6</span>
+                    </div>
+                    
+                    <div style="text-align: right; margin-top: 10px; font-family: 'Cinzel'; font-weight: bold;">
+                        Total: 30
+                    </div>
+                </div>
+
+                <div class="hud-container">
+                    <div class="hud-row">
+                        <span class="hud-label"># HP</span>
+                        <span class="hud-value">{ 50 / 50 }</span>
+                    </div>
+                    <div style="background: #444; height: 6px; width: 100%; margin-bottom: 10px; border: 1px solid #000;">
+                        <div style="background: #8a3324; height: 100%; width: 100%;"></div>
+                    </div>
+
+                    <div class="hud-row">
+                        <span class="hud-label">## Level</span>
+                        <span class="hud-value">[ 0 ]</span>
+                    </div>
+
+                    <div class="hud-row">
+                        <span class="hud-label">## Exp</span>
+                        <span class="hud-value">[ 0 / 50 ]</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAGE 4: VISUAL RECORD / QUOTE -->
+        <div class="page" id="p4">
+            <div class="front">
+                <h2>Visual Record</h2>
+                <span class="machine-text">Image Capture: Subject 01</span>
+                
+                <div class="portrait-frame">
+                    <img src="download20251200200244.png" alt="Fallen God Character">
+                </div>                
+                <div style="position: absolute; bottom: 20px; width: 100%; text-align: center;">
+                    <hr style="border-color: #8a3324; width: 50%; margin: 10px auto;">
+                    <small style="font-family: 'Special Elite';">END OF FILE</small>
+                </div>
+            </div>
+
+            <div class="back">
+                 <div style="display: flex; height: 100%; align-items: center; justify-content: center; opacity: 0.5;">
+                     <p style="font-family: 'Cinzel'; text-align: center; font-size: 1.5rem;">"Even gods bleed<br>when the gears turn."</p>
+                 </div>
+            </div>
+        </div>
+
+        <!-- PAGE 5: BACK COVER -->
+        <div class="page" id="p5">
+            <div class="front">
+                <!-- Blank Spacer page to allow the back cover to close properly -->
+                <div style="display: flex; height: 100%; align-items: center; justify-content: center; opacity: 0.2;">
+                     <div style="font-size: 3rem; color: #5e4b35;">‡</div>
+                </div>
+            </div>
+            <div class="back cover-front" style="transform: rotateY(180deg);">
+                <div style="height: 100%; display: flex; align-items: center; justify-content: center;">
+                    <small>PROPERTY OF NO ONE</small>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="controls">
+        <button onclick="goPrev()">Previous</button>
+        <button onclick="goNext()">Next</button>
+    </div>
+
+    <script>
+        let currentPage = 1;
+        const totalPages = 5;
+
+        function goNext() {
+            if (currentPage < totalPages) {
+                const page = document.getElementById('p' + currentPage);
+                page.classList.add('flipped');
+                page.style.zIndex = currentPage; 
+                currentPage++;
+            }
+        }
+
+        function goPrev() {
+            if (currentPage > 1) {
+                currentPage--;
+                const page = document.getElementById('p' + currentPage);
+                page.classList.remove('flipped');
+                setTimeout(() => {
+                    page.style.zIndex = (totalPages + 1) - currentPage; 
+                }, 600);
+            }
+        }
+
+        // Initialize Z-Indexes
+        window.onload = function() {
+            for(let i = 1; i <= totalPages; i++) {
+                document.getElementById('p'+i).style.zIndex = (totalPages + 1) - i;
+            }
+        }
+    </script>
+</body>
+</html>
